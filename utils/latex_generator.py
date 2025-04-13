@@ -87,12 +87,18 @@ class LatexGenerator:
         if "``" in text and "''" in text:
             return text
             
-        # 处理引号对
+        # 处理双引号对
         # 使用负向前视和负向后视确保不会影响已存在的LaTeX引号
         text = re.sub(r'(?<!`)(?<!\\)"(.*?)(?<!\\)"(?!\')', r"``\1''", text)
         
-        # 处理剩余的未配对引号
+        # 处理剩余的未配对双引号
         text = re.sub(r'(?<!`)(?<!\\)"', r"``", text)
+        
+        # 处理单引号对 - 左单引号用反引号，右单引号保持不变
+        text = re.sub(r"(?<!\`)(?<!\\)'(.*?)(?<!\\)'(?!\')", r"`\1'", text)
+        
+        # 处理剩余的未配对单引号（假设是左单引号）
+        text = re.sub(r"(?<!\`)(?<!\\)'", r"`", text)
         
         return text
         
@@ -112,7 +118,7 @@ class LatexGenerator:
         
     def _fix_greek_letters(self, text):
         """
-        修复文本中的Unicode希腊字母，替换为LaTeX格式
+        修复文本中的Unicode希腊字母和数学符号，替换为LaTeX格式
         
         参数:
         - text: 需要修复的文本
@@ -133,12 +139,16 @@ class LatexGenerator:
             'Λ': '$\\Lambda$',
             'Ξ': '$\\Xi$', 'Π': '$\\Pi$',
             'Σ': '$\\Sigma$', 
-            'Φ': '$\\Phi$', 'Ψ': '$\\Psi$', 'Ω': '$\\Omega$'
+            'Φ': '$\\Phi$', 'Ψ': '$\\Psi$', 'Ω': '$\\Omega$',
+            # 数学符号
+            '≥': '$\\geq$',
+            '≤': '$\\leq$',
+            '∈': '$\\in$'
         }
         
-        # 替换所有希腊字母
-        for greek, latex in greek_map.items():
-            text = text.replace(greek, latex)
+        # 替换所有希腊字母和数学符号
+        for symbol, latex in greek_map.items():
+            text = text.replace(symbol, latex)
             
         return text
         
@@ -252,8 +262,8 @@ class LatexGenerator:
             f.write("\\vspace{2em}\n")
             
             # 摘要
-            f.write("\\begin{abstract}\n")
             f.write("\\hypertarget{sec:abstract}\n")
+            f.write("{\\begin{abstract}}\n")
             # 移除可能存在的#符号
             abstract = data.get("abstract", "No abstract provided.")
             abstract = re.sub(r'#+', '', abstract)
@@ -274,8 +284,8 @@ class LatexGenerator:
             # f.write("\\end{IEEEkeywords}\n\n")
             
             # 引言
-            f.write("\\section{Introduction}\n")
             f.write("\\hypertarget{sec:introduction}\n")
+            f.write("{\\section{Introduction}}\n")
             # 移除可能存在的#符号
             introduction = data.get("introduction", "No introduction provided.")
             introduction = re.sub(r'#+', '', introduction)
@@ -292,8 +302,8 @@ class LatexGenerator:
             f.write(introduction + "\n\n")
             
             # 问题定义和基本概念
-            f.write("\\section{Problem Definition and Basic Concepts}\n")
             f.write("\\hypertarget{sec:problem}\n")
+            f.write("{\\section{Problem Definition and Basic Concepts}}\n")
             # 移除可能存在的#符号
             problem_definition = data.get("problem_definition", "No problem definition provided.")
             problem_definition = re.sub(r'#+', '', problem_definition)
@@ -310,8 +320,8 @@ class LatexGenerator:
             f.write(problem_definition + "\n\n")
             
             # 挑战和开放问题
-            f.write("\\section{Challenges and Open Problems}\n")
             f.write("\\hypertarget{sec:challenges}\n")
+            f.write("{\\section{Challenges and Open Problems}}\n")
             # 移除可能存在的#符号
             challenges = data.get("challenges", "No challenges provided.")
             challenges = re.sub(r'#+', '', challenges)
@@ -328,8 +338,8 @@ class LatexGenerator:
             f.write(challenges + "\n\n")
             
             # 未来研究方向
-            f.write("\\section{Future Research Directions}\n")
             f.write("\\hypertarget{sec:future}\n")
+            f.write("{\\section{Future Research Directions}}\n")
             # 移除可能存在的#符号
             future_directions = data.get("future_directions", "No future directions provided.")
             future_directions = re.sub(r'#+', '', future_directions)
@@ -346,8 +356,8 @@ class LatexGenerator:
             f.write(future_directions + "\n\n")
             
             # 结论
-            f.write("\\section{Conclusion}\n")
             f.write("\\hypertarget{sec:conclusion}\n")
+            f.write("{\\section{Conclusion}}\n")
             # 移除可能存在的#符号
             conclusion = data.get("conclusion", "No conclusion provided.")
             conclusion = re.sub(r'#+', '', conclusion)
@@ -364,8 +374,8 @@ class LatexGenerator:
             f.write(conclusion + "\n\n")
             
             # 参考文献
-            f.write("\\section*{References}\n")
             f.write("\\hypertarget{sec:references}\n")
+            f.write("{\\section*{References}}\n")
             references = data.get("references", [])
             papers = data.get("papers", [])
             
